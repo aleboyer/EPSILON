@@ -6,6 +6,9 @@ else
     root_data='/Users/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/';
     root_script='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
 end
+
+
+
 Cruise_name='Plumex_Feb2018'; % 
 WW_name='EPSIFISH'; % 
 deployement='mar3';
@@ -72,7 +75,7 @@ end
 save([WWpath 'Turbulence_Profiles.mat'],'MS','EPSI_Profiles')
 
 load([WWpath 'Turbulence_Profiles.mat'],'MS','EPSI_Profiles')
-Epsilon_class=calc_binned_epsi(MS{);
+Epsilon_class=calc_binned_epsi(MS);
 Chi_class=calc_binned_chi(MS);
 
 [F1,F2]=plot_binned_epsilon(Epsilon_class,'Mar3 ');
