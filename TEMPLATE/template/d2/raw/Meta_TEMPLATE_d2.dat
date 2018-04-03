@@ -1,0 +1,39 @@
+mission:TEMPLATE
+vehicle_name:template
+deployement:d2
+path_mission:.
+vehicle:WireWalker
+root:./TEMPLATE/template/d2
+L1path:./TEMPLATE/template/d2/L1/
+Epsipath:./TEMPLATE/template/d2/epsi/
+CTDpath:./TEMPLATE/template/d2/ctd/
+RAWpath:./TEMPLATE/template/d2/raw/
+
+Firmware
+    version:MADRE2.1
+    sampling_frequency:320Hz
+    ADCshear:Unipolar
+    ADC_FPO7:Unipolar
+    ADC_accellerometer:Unipolar
+
+aux1
+    name:SBE49
+    SN:00000
+    cal_file:path/to/file
+
+epsi
+    s1:
+        SN:102
+        Sv:42.12
+        ADCfilter:sinc4
+    s2:
+        SN:102
+        Sv:42.12
+        ADCfilter:sinc4
+    t1:
+        SN:000
+        ADCfilter:sinc4
+    t2:
+        SN:000
+        ADCfilter:sinc4
+    shearcal_path:/Users/aleboyer/ARNAUD/SCRIPPS/SHEAR_PROBE/CALIBRATION
