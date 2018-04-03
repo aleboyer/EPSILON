@@ -7,7 +7,6 @@ else
     root_script='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
 end
 
-'arnaud is stINKY'
 
 Cruise_name='Plumex_Feb2018'; % 
 WW_name='EPSIFISH'; % 
