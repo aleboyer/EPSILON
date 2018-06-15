@@ -7,7 +7,7 @@ if isfield(data,'info')
     data=rmfield(data,'info');
 end
 pdata=-data.P;
-tdata=data.ctdtime;
+tdata=data.time;
 L=length(tdata);
 
 % buid a filter 
@@ -26,12 +26,10 @@ fc  = 1/600/dt; % 100 dt (give "large scale patern")
 filt_pdata=filtfilt(b,a,pdata);
 shortdata=filt_pdata(floor(L/3):floor(2*L/3));
 ddata=diff(shortdata);
-meandata=nanmean(shortdata(abs(ddata)>=.5*nanmax(abs(ddata))));
-%prime_data=filt_pdata-meandata;
 prime_data=filt_pdata;
-crit=1;
+%crit=1;
 
-Start_ind    =  find(prime_data<=-crit,1,'first');
+Start_ind    =  find(prime_data>=-crit,1,'first');
 nb_profile   =  1;
 do_it        =  0;
 

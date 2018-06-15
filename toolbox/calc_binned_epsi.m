@@ -17,7 +17,12 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     %% create common k(cpm) axis
     maxk = max([S_MS.k]);
     mink = min([S_MS.k]);
-    dk   = min([S_MS.k]);
+    if mink==0
+        mink=sort([S_MS.k]);
+        mink=mink(find(mink>0,1,'first'));
+    end
+    dk   = mink;
+    
     k    = mink:dk:maxk;
     
     % project Epsilon fields onto the common k and omega axis 
@@ -25,7 +30,7 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     Psheark=[Psheark{:}];
     
     epsilon=cat(1,S_MS.epsilon);
-    kvis=cat(1,S_MS.kvis);
+    kvis=real(cat(1,S_MS.kvis));
     
     index1=arrayfun(@(x) find(epsilon(:,1)>=x-.5*x & epsilon(:,1)<x+.5*x),epsi_bin,'un',0);
     index2=arrayfun(@(x) find(epsilon(:,2)>=x-.5*x & epsilon(:,2)<x+.5*x),epsi_bin,'un',0);
@@ -45,7 +50,7 @@ function Epsilon_class=calc_binned_epsi(MS,epsi_bin)
     Epsilon_class.kvis=cellfun(@(x) nanmean(kvis(x)),index1,'un',0);
     Epsilon_class.kvis=cellfun(@(x) iif(isnan(x),nanmean([Epsilon_class.kvis{:}]),~isnan(x),x), ...
                    Epsilon_class.kvis,'un',0);
-
+   
     [kpan,Ppan] = cellfun(@(x,y) panchev(x,y),num2cell(epsi_bin),Epsilon_class.kvis,'un',0);
     Epsilon_class.kpan = cell2mat(kpan).';
     Epsilon_class.Ppan = cell2mat(Ppan).';

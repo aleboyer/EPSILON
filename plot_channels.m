@@ -1,0 +1,67 @@
+
+loglog(MS{1}.f,squeeze(MS{1}.Pf(3,10:30,:)))
+xlabel('Hz','fontsize',15)
+ylabel('s^{-2} /Hz','fontsize',15)
+title('SP1810 Shear 1','fontsize',15)
+print([WWpath deployement '_SP1810_shear1.png'],'-dpng2')
+
+loglog(MS{1}.f,squeeze(MS{1}.Pf(4,10:30,:)))
+xlabel('Hz','fontsize',15)
+ylabel('s^{-2} /Hz','fontsize',15)
+title('SP1810 Shear 2','fontsize',15)
+print([WWpath deployement '_SP1810_shear2.png'],'-dpng2')
+
+
+loglog(MS{1}.f,squeeze(MS{1}.Pf(1,10:30,:)))
+xlabel('Hz','fontsize',15)
+ylabel('C^{-2} /Hz','fontsize',15)
+title('SP1810 temp 1','fontsize',15)
+print([WWpath deployement '_SP1810_temp1.png'],'-dpng2')
+
+loglog(MS{1}.f,squeeze(MS{1}.Pf(2,10:30,:)))
+xlabel('Hz','fontsize',15)
+ylabel('C^{-2} /Hz','fontsize',15)
+title('SP1810 temp 2','fontsize',15)
+print([WWpath deployement '_SP1810_temp2.png'],'-dpng2')
+
+figure
+ax(1)=subplot(411)
+plot(Sensor1)
+title('SP1810 temp 1','fontsize',15)
+ylabel('Volt','fontsize',15)
+ax(2)=subplot(412)
+plot(Sensor2)
+ylabel('Volt','fontsize',15)
+ax(3)=subplot(413)
+ylabel('Volt','fontsize',15)
+ax(2)=subplot(412)
+plot(Sensor2)
+title('SP1810 temp 2','fontsize',15)
+ax(3)=subplot(413)
+plot(Sensor3)
+title('SP1810 shear1','fontsize',15)
+ylabel('Volt','fontsize',15)
+ax(4)=subplot(414);
+plot(Sensor4)
+ylabel('Volt','fontsize',15)
+title('SP1810 shear2','fontsize',15)
+linkaxes(ax,'x')
+print([WWpath deployement '_SP1810_channles.png'],'-dpng2')
+
+figure
+ax(1)=subplot(311)
+plot(Sensor6)
+title('SP1810 Ax','fontsize',15)
+ylabel('Volt','fontsize',15)
+ax(2)=subplot(312)
+plot(Sensor7)
+ylabel('Volt','fontsize',15)
+title('SP1810 Ay','fontsize',15)
+ax(3)=subplot(313)
+ylabel('Volt','fontsize',15)
+plot(Sensor8)
+title('SP1810 Az','fontsize',15)
+linkaxes(ax,'x')
+print([WWpath deployement '_SP1810_Accel.png'],'-dpng2')
+
+

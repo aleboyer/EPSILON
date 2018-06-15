@@ -20,9 +20,9 @@ switch version
         sinc4_freq=f/(2*f(end));
         
         H.gainshear=1;
-        H.adcshear=H.gainshear.*(sinc(sinc4_freq)).^4;
-        H.electshear=helectronics;
-        H.shear=H.electshear .* H.adcshear;
+        H.adcshear=(H.gainshear.*(sinc(sinc4_freq)).^4);
+        H.electshear=helectronics.^2;
+        H.shear=H.electshear .* H.adcshear.^2;
         
         %% FPO7 channels
         H.gainFPO7=1;
@@ -32,11 +32,11 @@ switch version
         %tau=0.005 * speed^(-0.32); % thermistor time constant
         H.magsq=@(speed)(1 ./ (1+((2*pi*(0.005 * speed^(-0.32))).*f).^2).^2); % magnitude-squared
         H.phase=@(speed)(-2*atan( 2*pi*f*(0.005 * speed^(-0.32))));
-        H.FPO7=@(speed)(H.electFPO7 .* H.magsq(speed));
+        H.FPO7=@(speed)(H.electFPO7.^2 .* H.magsq(speed));
 
         %% Accel channels
         H.gainAccel  = 1;
-        H.electAccel = H.gainAccel.*(sinc(sinc4_freq)).^4;
+        H.electAccel = (H.gainAccel.*(sinc(sinc4_freq)).^4).^2;
 
 end
 

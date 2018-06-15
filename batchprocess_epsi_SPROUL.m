@@ -1,17 +1,11 @@
 %% 
-if exist('/Volumes/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/','dir')
-    root_data='/Volumes/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/';
-    root_script='/Volumes/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
-else
-    root_data='/Users/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/';
-    root_script='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
-end
+root_data='/Volumes/Ahua/data_archive/WaveChasers-DataArchive/EPSI_SPROUL/';
+root_script='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
 
 
-
-Cruise_name='Plumex_Feb2018'; % 
-WW_name='EPSIFISH'; % 
-deployement='mar3';
+Cruise_name='EPSI_SPROUL'; % 
+WW_name='EPSI'; % 
+deployement='d2';
 
 %% add the needed toobox 
 %addpath /Users/aleboyer/ARNAUD/SCRIPPS/WireWalker/scripts/mixing_library/mixing_library/private1/seawater
@@ -56,7 +50,8 @@ if isfield(CTD_Profiles{1},'time')
 end
 if ~isfield(EPSI_Profiles{1},'epsitime')
     for p=1:length(EPSI_Profiles)
-        EPSI_Profiles{p}.epsitime=EPSI_Profiles{p}.nbsample./325;
+        EPSI_Profiles{p}.nbsample=EPSI_Profiles{p}.time;
+        EPSI_Profiles{p}.epsitime=EPSI_Profiles{p}.time;
     end
 end
 
@@ -79,12 +74,12 @@ Epsilon_class=calc_binned_epsi(MS);
 Chi_class=calc_binned_chi(MS);
 
 [F1,F2]=plot_binned_epsilon(Epsilon_class,'Mar3 ');
-print(F1,[WWpath deployement '_binned_epsilon1_t5s.png'],'-dpng2')
-print(F2,[WWpath deployement '_binned_epsilon2_t5s.png'],'-dpng2')
+print(F1,'binned_epsilon1_t5s.png','-dpng2')
+print(F2,'binned_epsilon2_t5s.png','-dpng2')
 
-[F1,F2]=plot_binned_chi(Chi_class,'Mar3',1:40);
-print(F1,[WWpath deployement '_binned_chi22_c_t5s.png'],'-dpng2')
-print(F2,[WWpath deployement '_binned_chi21_c_t5s.png'],'-dpng2')
+[F1,F2]=plot_binned_chi(Chi_class,'SPROUL');
+print(F1,'binned_chi22_c_sproul.png','-dpng2')
+print(F2,'binned_chi21_c_sproul.png','-dpng2')
 
 
 i=3;j=10;
@@ -248,11 +243,5 @@ fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
 print(sprintf('../FIGURE/CHI/%s_EpsiMap2.png',name_rbr),'-dpng2')
-
-
-
-
-
-
 
 

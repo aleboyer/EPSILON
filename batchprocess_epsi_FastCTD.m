@@ -3,14 +3,14 @@ if exist('/Volumes/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/','dir')
     root_data='/Volumes/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/';
     root_script='/Volumes/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
 else
-    root_data='/Users/aleboyer/ARNAUD/SCRIPPS/PLUMEX18/';
+    root_data='/Users/aleboyer/ARNAUD/SCRIPPS/';
     root_script='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
 end
 
 
-Cruise_name='Plumex_Feb2018'; % 
-WW_name='EPSIFISH'; % 
-deployement='mar3';
+Cruise_name='NISKINE'; % 
+WW_name='EPSIfish2W'; % 
+deployement='d3';
 
 %% add the needed toobox 
 %addpath /Users/aleboyer/ARNAUD/SCRIPPS/WireWalker/scripts/mixing_library/mixing_library/private1/seawater
@@ -38,8 +38,7 @@ tscan     =  3;                                                            % len
 FS        = 325;                     % sample rate channels
 df        = 1/tscan;                                                       % number of samples per scan (1s) in channels
 % shear 103,104 = s2,s1
-Sv        = [56.99,45.17]; % TODO get Sv directly from the database
-Cs        = [802,775];
+Sv        = [53.99,8.16]; % TODO get Sv directly from the database
 q=3.2;
 
 f=(df:df:FS/2)'; % frequency vector for spectra
@@ -47,43 +46,34 @@ Epsilon = struct([]);
 chi     = struct([]);
 timeaxis=zeros(1,length(EPSI_Profiles));
 
-%% if there are discrepancie with previous profile process TODO: fix the discrepancies upstream ... 
-if isfield(CTD_Profiles{1},'time')
-    for p=1:length(CTD_Profiles)
-        CTD_Profiles{p}.ctdtime=CTD_Profiles{p}.time;
-    end
-end
-if ~isfield(EPSI_Profiles{1},'epsitime')
-    for p=1:length(EPSI_Profiles)
-        EPSI_Profiles{p}.epsitime=EPSI_Profiles{p}.nbsample./325;
-    end
-end
-
 % add pressure from ctd to the epsi profile. This should be ter mporary until
 % the addition of the pressure sensor on Epsi
-for i=1:length(EPSI_Profiles)
+%for i=[1:22 24:length(EPSI_Profiles)]
+for i=[1:22 24:length(EPSI_Profiles)]
     %TODO correct the double(Sensor5) earlier in the process
-    EPSI_Profiles{i}.Sensor5=double(EPSI_Profiles{i}.Sensor5); % TODO Sensor used for dev phase, it will be replace by conductivity
-    EPSI_Profiles{i}.P=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.P,EPSI_Profiles{i}.nbsample);
-    EPSI_Profiles{i}.T=interp1(CTD_Profiles{i}.ctdtime,CTD_Profiles{i}.T,EPSI_Profiles{i}.nbsample);
-    S=sw_salt(CTD_Profiles{i}.C*10./sw_c3515,CTD_Profiles{i}.T,CTD_Profiles{i}.P);
-    EPSI_Profiles{i}.S=interp1(CTD_Profiles{i}.ctdtime,S,EPSI_Profiles{i}.nbsample);
+    [ctdtime,IA,IB]=unique(CTD_Profiles{i}.time);
+    P=CTD_Profiles{i}.P(IA);
+    S=CTD_Profiles{i}.S(IA);
+    T=CTD_Profiles{i}.T(IA);
+    EPSI_Profiles{i}.P=interp1(ctdtime,P,EPSI_Profiles{i}.time);
+    EPSI_Profiles{i}.T=interp1(ctdtime,T,EPSI_Profiles{i}.time);
+    EPSI_Profiles{i}.S=interp1(ctdtime,S,EPSI_Profiles{i}.time);
     MS{i}=calc_turbulence_epsi_FastCTD(EPSI_Profiles{i},tscan,f,Sv);
     %Epsilon{i}.timeaxis=nanmean(Profiles{i}.rbrtime);
 end
 save([WWpath 'Turbulence_Profiles.mat'],'MS','EPSI_Profiles')
 
 load([WWpath 'Turbulence_Profiles.mat'],'MS','EPSI_Profiles')
-Epsilon_class=calc_binned_epsi(MS);
-Chi_class=calc_binned_chi(MS);
+Epsilon_class=calc_binned_epsi(MS([1:22 24:end]));
+Chi_class=calc_binned_chi(MS([1:22 24:end]));
 
-[F1,F2]=plot_binned_epsilon(Epsilon_class,'Mar3 ');
-print(F1,[WWpath deployement '_binned_epsilon1_t5s.png'],'-dpng2')
-print(F2,[WWpath deployement '_binned_epsilon2_t5s.png'],'-dpng2')
+[F1,F2]=plot_binned_epsilon(Epsilon_class,'NISKINE');
+print(F1,[WWpath deployement '_binned_epsilon1_t3s.png'],'-dpng2')
+print(F2,[WWpath deployement '_binned_epsilon2_t3s.png'],'-dpng2')
 
-[F1,F2]=plot_binned_chi(Chi_class,'Mar3',1:40);
-print(F1,[WWpath deployement '_binned_chi22_c_t5s.png'],'-dpng2')
-print(F2,[WWpath deployement '_binned_chi21_c_t5s.png'],'-dpng2')
+[F1,F2]=plot_binned_chi(Chi_class,'NISKINE',1:40);
+print(F1,[WWpath deployement '_binned_chi22_c_t3s.png'],'-dpng2')
+print(F2,[WWpath deployement '_binned_chi21_c_t3s.png'],'-dpng2')
 
 
 i=3;j=10;
@@ -121,11 +111,14 @@ for j=100:150
 end
             
 return
-Map_pr=cellfun(@(x) (x.pr),Epsilon,'un',0);
+MSempty=cellfun(@isempty,MS);
+Map_pr=cellfun(@(x) (x.pr),MS(~MSempty),'un',0);
 zaxis=min([Map_pr{:}]):.5:max([Map_pr{:}]);
-Map_epsilon=cellfun(@(x) interp1(x.pr,x.epsilon,zaxis),Epsilon,'un',0);
+Map_epsilon=cellfun(@(x) interp1(x.pr,x.epsilon(:,1),zaxis),MS(~MSempty),'un',0);
+Map_time=cell2mat(cellfun(@(x) mean(x.time),MS(~MSempty),'un',0));
+
 Map_epsilon=cell2mat(Map_epsilon.');
-CTDgrid.Epsilon=interp1(zaxis,Map_epsilon.',CTDgrid.z);
+%CTDgrid.Epsilon=interp1(zaxis,Map_epsilon.',CTDgrid.z);
 save([WWpath WW_name '_grid.mat'],'CTDgrid')
 
 
@@ -135,7 +128,9 @@ L=length(level);
 close all
 figure;
 colormap('jet')
-pcolor(RBRgrid.time,RBRgrid.z,log10(RBRgrid.Epsilon));shading interp;axis ij
+pcolor(Map_time,zaxis,log10(real(Map_epsilon.')));shading flat;axis ij
+colorbar
+caxis([-9.5 -7.5])
 hold on
 contour(RBRgrid.time,RBRgrid.z,RBRgrid.rho,[level(1:5:L-200) level(L-200:L)],'k')
 hold off

@@ -27,8 +27,8 @@ function Chi_class=calc_binned_chi(MS,epsi_bin)
     
     chi=cat(1,S_MS.chi);
     epsilon=cat(1,S_MS.epsilon);
-    kvis=cat(1,S_MS.kvis);
-    ktemp=cat(1,S_MS.ktemp);
+    kvis=real(cat(1,S_MS.kvis));
+    ktemp=real(cat(1,S_MS.ktemp));
 
     index11=cell(length(chi_bin),length(epsi_bin));
     index12=cell(length(chi_bin),length(epsi_bin));
@@ -125,16 +125,32 @@ function Chi_class=calc_binned_chi(MS,epsi_bin)
             y=epsi_bin(j);
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis11{i,j},Chi_class.ktemp11{i,j});
-            Chi_class.Pbatch11(i,j,:)=interp1(kbatch,Pbatch,k);
+            if ~isnan(kbatch)
+                Chi_class.Pbatch11(i,j,:)=interp1(kbatch,Pbatch,k);
+            else
+                Chi_class.Pbatch11(i,j,:)=nan;
+            end
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis12{i,j},Chi_class.ktemp12{i,j});
-            Chi_class.Pbatch12(i,j,:)=interp1(kbatch,Pbatch,k);
+            if ~isnan(kbatch)
+                Chi_class.Pbatch12(i,j,:)=interp1(kbatch,Pbatch,k);
+            else
+                Chi_class.Pbatch12(i,j,:)=nan;
+            end
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis21{i,j},Chi_class.ktemp21{i,j});
-            Chi_class.Pbatch21(i,j,:)=interp1(kbatch,Pbatch,k);
+            if ~isnan(kbatch)
+                Chi_class.Pbatch21(i,j,:)=interp1(kbatch,Pbatch,k);
+            else
+                Chi_class.Pbatch21(i,j,:)=nan;
+            end
             [kbatch,Pbatch] = batchelor(y,x, ...
                                Chi_class.kvis22{i,j},Chi_class.ktemp22{i,j});
-            Chi_class.Pbatch22(i,j,:)=interp1(kbatch,Pbatch,k);
+            if ~isnan(kbatch)
+                Chi_class.Pbatch22(i,j,:)=interp1(kbatch,Pbatch,k);
+            else
+                Chi_class.Pbatch22(i,j,:)=nan;
+            end
         end
     end
             

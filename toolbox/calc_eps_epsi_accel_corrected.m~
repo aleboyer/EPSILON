@@ -63,7 +63,7 @@ end
 
 
 %% read filters
-h_freq=get_filters_MADRE('MADRE2.1',f);
+h_freq=get_filters_MADRE('MADRE2.1',f.');
 %%
 fmax=20; %defined by get_coherence_epsi.m -> the WW is vibrating around 30 hz 
 
@@ -137,12 +137,12 @@ for j=1:length(ind_cast)
         k1=f1.'/speed;
         dk=df/speed;
         % evaluate and apply transfer function
-        htotal = (Sv.*speed/(2*G)).^2 .* h_freq.shear .* haf_oakey(f,speed);        % should add epsi filter
-        Pvel1  = P1.*speed ./ htotal(:,1);                                      % vel spec as function of k
-        Pvel2  = P2.*speed ./ htotal(:,2);                                      % vel spec as function of k
-        P1a(j,:)=P1a(j,:).*speed./ sqrt([htotal(:,1).' flipud(htotal(:,1)).' ]); 
-        P2a(j,:)=P2a(j,:).*speed./ sqrt([htotal(:,2).' flipud(htotal(:,2)).' ]);
-        P3a(j,:)=P3a(j,:).*speed./ sqrt([h_freq.shear.' h_freq.shear.']);
+        htotal = (Sv.*speed/(2*G)).^2 .* h_freq.shear .* haf_oakey(f.',speed);        % should add epsi filter
+        Pvel1  = P1 ./ htotal(:,1);                                      % vel spec as function of k
+        Pvel2  = P2 ./ htotal(:,2);                                      % vel spec as function of k
+        P1a(j,:)=P1a(j,:)./ sqrt([htotal(:,1).' flipud(htotal(:,1)).' ]); 
+        P2a(j,:)=P2a(j,:)./ sqrt([htotal(:,2).' flipud(htotal(:,2)).' ]);
+        P3a(j,:)=P3a(j,:)./ [h_freq.shear.' h_freq.shear.'];
         
         Sh1(j,:)=(2*pi*k).^2 .* Pvel1;
         Sh2(j,:)=(2*pi*k).^2 .* Pvel2;
@@ -154,22 +154,21 @@ for j=1:length(ind_cast)
         P23=2*P23a(j,indf1);
         H1(j,:)= P13./P3(j,:); %transfer function between measured (mm) shear and acceleration (aa)
         H2(j,:)= P23./P3(j,:); %transfer function between measured (mm) shear and acceleration (aa)
-        Co(j,:)= P13.^2./(P3(j,:).*Sh1(j,:)); %transfer function between measured (mm) shear and acceleration (aa)
     end
 end
        
-mH1=smoothdata(abs(H1),1,'movmean',20);
-mH2=smoothdata(abs(H2),1,'movmean',20);
+mH1=smoothdata(H1,1,'movmean',20);
+mH2=smoothdata(H2,1,'movmean',20);
 
 for j=1:length(ind_cast)
     speed=Epsilon.w(j); % convert to m/s
     if speed > .2
 
-        Sh1a(j,:) = Sh1(j,:) - abs(H1(j,:)).^2.*P3(j,:);  % Css(f) = Cmm(f) - |H(f)|^2*Caa(f)
-        Sh2a(j,:) = Sh2(j,:) - abs(H2(j,:)).^2.*P3(j,:);  % Css(f) = Cmm(f) - |H(f)|^2*Caa(f)
+        Sh1a(j,:) = Sh1(j,:) - abs(mH1(j,:)).^2.*P3(j,:);  % Css(f) = Cmm(f) - |H(f)|^2*Caa(f)
+        Sh2a(j,:) = Sh2(j,:) - abs(mH2(j,:)).^2.*P3(j,:);  % Css(f) = Cmm(f) - |H(f)|^2*Caa(f)
         
-        Epsilon.Pshear1{j} = Sh1a;                          % shear spec  as function of k
-        Epsilon.Pshear2{j} = Sh2a;                          % shear spec  as function of k
+        Epsilon.Pshear1{j} = Sh1a*speed;                          % shear spec  as function of k
+        Epsilon.Pshear2{j} = Sh2a*speed;                          % shear spec  as function of k
 
         Epsilon.k{j}      = k;                                             % k
         Epsilon.kvis{j}   = kvis;
@@ -181,14 +180,11 @@ for j=1:length(ind_cast)
         Epsilon.kmax(j)=fmax/speed; % Lowest estimate below pump spike in 1024-pt record
         % Check that data window > 0.5 m, as needed for initial estimate
         if tscan*speed>0.5
-            [Epsilon.epsilon1(j),Epsilon.kc1(j)]=eps1_mmp(k,Epsilon.Pshear1{j},kvis,dk,Epsilon.kmax(j));
-            [Epsilon.epsilon2(j),Epsilon.kc2(j)]=eps1_mmp(k,Epsilon.Pshear2{j},kvis,dk,Epsilon.kmax(j));
+            [Epsilon.epsilon1(j),Epsilon.kc1(j)]=eps1_mmp(k,Epsilon.Pshear1{j},kvis,speed,dk,Epsilon.kmax(j));
+            [Epsilon.epsilon2(j),Epsilon.kc2(j)]=eps1_mmp(k,Epsilon.Pshear2{j},kvis,speed,dk,Epsilon.kmax(j));
             [Epsilon.kpan1{j},Epsilon.Ppa1{j}] = panchev(Epsilon.epsilon1(j),kvis);
             [Epsilon.kpan2{j},Epsilon.Ppa2{j}] = panchev(Epsilon.epsilon2(j),kvis);
         end
-        Epsilon.Paccel=P3;
-        Epsilon.H1=H1;
-        Epsilon.H2=H2;
         %
     end
 end% end nbscan, end profile processing

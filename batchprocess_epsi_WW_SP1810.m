@@ -70,6 +70,9 @@ print(F2,[WWpath deployement '_binned_epsilon2_t3s.png'],'-dpng2')
 print(F1,[WWpath deployement '_binned_chi22_c_t5s.png'],'-dpng2')
 print(F2,[WWpath deployement '_binned_chi21_c_t5s.png'],'-dpng2')
 
+indok=cellfun(@isempty,MS);
+MS=MS(~indok);
+load([WWpath 'WW_grid.mat'],'RBRgrid')
 
 Map_pr=cellfun(@(x) (x.pr),MS,'un',0);
 zaxis=min([Map_pr{:}]):.5:max([Map_pr{:}]);
@@ -83,7 +86,7 @@ RBRgrid.Epsilon2=interp1(zaxis,Map_epsilon2.',RBRgrid.z);
 save([WWpath vehicle_name '_grid.mat'],'RBRgrid')
 
 load([WWpath vehicle_name '_grid.mat'],'RBRgrid')
-level=1027.3:.01:1028.9;
+level=nanmin(RBRgrid.rho(:)):.01:nanmax(RBRgrid.rho(:));
 L=length(level);
 
 t1=RBRgrid.time(indok(1));
@@ -94,9 +97,9 @@ figure;
 subplot('Position',[.1 .1 .6 .8])
 %colormap('parula')
 colormap('redbluecmap')
-pcolor(RBRgrid.time(indok),RBRgrid.z,log10(RBRgrid.Epsilon1));shading flat;axis ij
+pcolor(RBRgrid.time,RBRgrid.z,log10(RBRgrid.Epsilon2));shading flat;axis ij
 hold on
-contour(RBRgrid.time(indok),RBRgrid.z,RBRgrid.rho(:,indok),[level(1:2:L-D) level(L-D:5:L)],'k')
+contour(RBRgrid.time,RBRgrid.z,RBRgrid.rho,[level(1:2:L-D) level(L-D:5:L)],'k')
 hold off
 caxis([-8,-4.5])
 set(gca,'XTickLabelRotation',45)
@@ -108,22 +111,25 @@ set(gca,'fontsize',15)
 ylabel(cax,'log_{10}(\epsilon) / W.kg^{-1}','fontsize',20)
 ylabel('Depth (m)','fontsize',20)
 xlabel(['Start:' datestr(t1)],'fontsize',20)
-title('Epsilon - shear 1 - WW - NISKINE','fontsize',20)
-xlim([t1 t2])
-ylim([2 300])
+title('Epsilon - shear 2 - WW - SP1810','fontsize',20)
+ylim([2 90])
+xlim(RBRgrid.time([1 end]))
 
+eventlog=find(RBRgrid.time>=datenum('17-Apr-2018 23:30:00'),1,'first');
+eventlog1=find(RBRgrid.time>=datenum('18-Apr-2018 00:30:00'),1,'first');
+eventlog2=find(RBRgrid.time>=datenum('18-Apr-2018 01:30:00'),1,'first');
 subplot('Position',[.82 .1 .15 .8])
-semilogx(RBRgrid.Epsilon1(:,1),RBRgrid.z,'linewidth',2)
+semilogx(RBRgrid.Epsilon1(:,eventlog),RBRgrid.z,'linewidth',2)
 hold on
-semilogx(RBRgrid.Epsilon1(:,2),RBRgrid.z,'linewidth',2)
-semilogx(RBRgrid.Epsilon1(:,3),RBRgrid.z,'linewidth',2)
-legend(datestr(RBRgrid.time(indok(1)),'HH:MM:SS'),...
-       datestr(RBRgrid.time(indok(2)),'HH:MM:SS'),...
-       datestr(RBRgrid.time(indok(3)),'HH:MM:SS'))
+semilogx(RBRgrid.Epsilon1(:,eventlog1),RBRgrid.z,'linewidth',2)
+semilogx(RBRgrid.Epsilon1(:,eventlog2),RBRgrid.z,'linewidth',2)
+legend(datestr(RBRgrid.time(eventlog),'HH:MM:SS'),...
+       datestr(RBRgrid.time(eventlog1),'HH:MM:SS'),...
+       datestr(RBRgrid.time(eventlog2),'HH:MM:SS'))
 set(gca,'XTick',[1e-10 1e-8 1e-6])   
 set(gca,'fontsize',15)
 axis ij
-ylim([2 300])
+ylim([2 90])
 xlim([1e-8 1e-4])
 title('Successive Profiles','fontsize',15)
 xlabel('\epsilon / W.kg^{-1}','fontsize',20)
@@ -132,7 +138,7 @@ xlabel('\epsilon / W.kg^{-1}','fontsize',20)
 fig=gcf;
 fig.PaperPosition = [0 0 15 10];
 fig.PaperOrientation='Portrait';
-print(sprintf('%s/%s_EpsiMap1.png',WWpath,name_ctd),'-dpng2')
+print(sprintf('%s/%s_EpsiMap2.png',WWpath,name_ctd),'-dpng2')
 
 close all
 figure;

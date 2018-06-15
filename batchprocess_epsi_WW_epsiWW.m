@@ -1,10 +1,10 @@
 %% 
-root_data='../';
+root_data='../EPSIWW/';
 root_script='/Users/aleboyer/ARNAUD/SCRIPPS/EPSILON/';
-epsifile = 'epsi_rbrsync_EPSI.mat';
-ctdfile  = 'Profiles_WW_rbr_d1.mat';
-Cruise_name='SP1810'; % 
-vehicle_name='WW'; % 
+epsifile = 'Profiles_EPSI_rbr_d1.mat';
+ctdfile  = 'Profiles_EPSI_rbr_d1.mat';
+Cruise_name='WW'; % 
+vehicle_name='EPSI'; % 
 deployement='d1';
 
 
@@ -23,19 +23,22 @@ epsipath=sprintf('%s/%s/%s/%s/epsi/',root_data,Cruise_name,vehicle_name,deployem
 name_ctd=[vehicle_name '_ctd_' deployement];
 
 %% 	get data 
-load([ WWpath '/Profiles_' name_ctd],'EpsiProfiles','CTDProfiles')
-load([WWpath 'WW_grid.mat'],'RBRgrid')
-
-LEpsiProfile=cellfun(@(x) length(x.EPSItime),EpsiProfiles);
+%load('/Users/aleboyer/ARNAUD/SCRIPPS/EPSIWW/WW/EPSI/d1/rbr/Profiles_EPSI_rbr_d1.mat')
+load('/Users/aleboyer/ARNAUD/SCRIPPS/EPSIWW/WW/EPSI/d1/epsi/Profiles_EPSI_rbr_d1.mat')
+%load([ WWpath '/Profiles_' name_ctd],'EpsiProfiles','RBRProfiles')
+%load([WWpath 'WW_grid.mat'],'RBRgrid')
+EpsiProfiles=EpsiProfile.dataup;
+CTDProfiles=RBRProfile.dataup;
+LEpsiProfile=cellfun(@(x) length(x.rbrtime),EpsiProfiles);
 indok=find(LEpsiProfile>10);
 EpsiProfiles=EpsiProfiles(indok);
 CTDProfiles=CTDProfiles(indok);
 
 %% Parameters fixed by data structure
 tscan     =  3;                                                            % length of 1 scan in second
-FS        = round(1./nanmean(diff(EpsiProfiles{1}.EPSItime))/86400);               % sample rate channels
+FS        = round(1./nanmean(diff(EpsiProfiles{1}.rbrtime))/86400);               % sample rate channels
 df        = 1/tscan;                                                       % number of samples per scan (1s) in channels
-Sv        = [51.63 63.43]; % SV for sh1 and sh2 from Meta_SP1810_d1.dat
+Sv        = [70.63 26.43]; % SV for sh1 and sh2 from Meta_SP1810_d1.dat
 
 f=(df:df:FS/2)'; % frequency vector for spectra
 Epsilon = struct([]);
@@ -49,14 +52,14 @@ q=3.2;
 % the addition of the pressure sensor on Epsi
 for i=1:length(EpsiProfiles)
     %TODO correct the double(Sensor5) earlier in the process
-    EpsiProfiles{i}.P=interp1(CTDProfiles{i}.time,CTDProfiles{i}.P,EpsiProfiles{i}.EPSItime);
-    EpsiProfiles{i}.T=interp1(CTDProfiles{i}.time,CTDProfiles{i}.T,EpsiProfiles{i}.EPSItime);
+    EpsiProfiles{i}.P=interp1(CTDProfiles{i}.time,CTDProfiles{i}.P,EpsiProfiles{i}.rbrtime);
+    EpsiProfiles{i}.T=interp1(CTDProfiles{i}.time,CTDProfiles{i}.T,EpsiProfiles{i}.rbrtime);
     S=sw_salt(CTDProfiles{i}.C*10./sw_c3515,CTDProfiles{i}.T,CTDProfiles{i}.P);
-    EpsiProfiles{i}.S=interp1(CTDProfiles{i}.time,S,EpsiProfiles{i}.EPSItime);
+    EpsiProfiles{i}.S=interp1(CTDProfiles{i}.time,S,EpsiProfiles{i}.rbrtime);
     MS{i}=calc_turbulence_epsiWW(EpsiProfiles{i},tscan,f,Sv);
     %Epsilon{i}.timeaxis=nanmean(Profiles{i}.rbrtime);
 end
-save([WWpath 'Turbulence_Profiles.mat'],'MS','EpsiProfiles')
+save([WWpath 'Turbulence_Profiles.mat'],'MS','EpsiProfiles','-v7.3')
 
 load([WWpath 'Turbulence_Profiles.mat'],'MS','EPSI_Profiles')
 Epsilon_class=calc_binned_epsi(MS);
@@ -70,6 +73,9 @@ print(F2,[WWpath deployement '_binned_epsilon2_t3s.png'],'-dpng2')
 print(F1,[WWpath deployement '_binned_chi22_c_t5s.png'],'-dpng2')
 print(F2,[WWpath deployement '_binned_chi21_c_t5s.png'],'-dpng2')
 
+indok=cellfun(@isempty,MS);
+MS=MS(~indok);
+load([WWpath 'WW_grid.mat'],'RBRgrid')
 
 Map_pr=cellfun(@(x) (x.pr),MS,'un',0);
 zaxis=min([Map_pr{:}]):.5:max([Map_pr{:}]);
@@ -83,49 +89,52 @@ RBRgrid.Epsilon2=interp1(zaxis,Map_epsilon2.',RBRgrid.z);
 save([WWpath vehicle_name '_grid.mat'],'RBRgrid')
 
 load([WWpath vehicle_name '_grid.mat'],'RBRgrid')
-level=1027.3:.01:1028.9;
+level=nanmin(RBRgrid.rho(:)):.01:nanmax(RBRgrid.rho(:));
 L=length(level);
 
 t1=RBRgrid.time(indok(1));
-t2=RBRgrid.time(indok(end));
-D=120;
+t2=t1+.5;
+D=150;
 close all
 figure;
 subplot('Position',[.1 .1 .6 .8])
 %colormap('parula')
 colormap('redbluecmap')
-pcolor(RBRgrid.time(indok),RBRgrid.z,log10(RBRgrid.Epsilon1));shading flat;axis ij
+pcolor(RBRgrid.time,RBRgrid.z,log10(1e-2.*RBRgrid.Epsilon1));shading flat;axis ij
 hold on
-contour(RBRgrid.time(indok),RBRgrid.z,RBRgrid.rho(:,indok),[level(1:2:L-D) level(L-D:5:L)],'k')
+contour(RBRgrid.time,RBRgrid.z,RBRgrid.rho,[level(1:10:L-D) level(L-D:2:L)],'k')
 hold off
-caxis([-8,-4.5])
+caxis([-9,-6])
 set(gca,'XTickLabelRotation',45)
-set(gca,'XTick',t1:t2-t1:RBRgrid.time(end))
-set(gca,'XTickLabel',datestr(t1:t2-t1:RBRgrid.time(end),'HH'))
-datetick
+set(gca,'XTick',t1:.1:t2)
+set(gca,'XTickLabel',datestr(t1:.1:t2,'HH'))
+%datetick
 cax=colorbar;
 set(gca,'fontsize',15)
 ylabel(cax,'log_{10}(\epsilon) / W.kg^{-1}','fontsize',20)
 ylabel('Depth (m)','fontsize',20)
 xlabel(['Start:' datestr(t1)],'fontsize',20)
-title('Epsilon - shear 1 - WW - NISKINE','fontsize',20)
+title('Epsilon - shear 2 - WW - La Jolla','fontsize',20)
+ylim([2 50])
 xlim([t1 t2])
-ylim([2 300])
 
+eventlog=find(RBRgrid.time>=datenum('21-Jun-2017 07:00:00'),1,'first');
+eventlog1=find(RBRgrid.time>=datenum('21-Jun-2017 08:00:00'),1,'first');
+eventlog2=find(RBRgrid.time>=datenum('21-Jun-2017 09:00:00'),1,'first');
 subplot('Position',[.82 .1 .15 .8])
-semilogx(RBRgrid.Epsilon1(:,1),RBRgrid.z,'linewidth',2)
+semilogx(1e-2.*RBRgrid.Epsilon1(:,eventlog),RBRgrid.z,'linewidth',2)
 hold on
-semilogx(RBRgrid.Epsilon1(:,2),RBRgrid.z,'linewidth',2)
-semilogx(RBRgrid.Epsilon1(:,3),RBRgrid.z,'linewidth',2)
-legend(datestr(RBRgrid.time(indok(1)),'HH:MM:SS'),...
-       datestr(RBRgrid.time(indok(2)),'HH:MM:SS'),...
-       datestr(RBRgrid.time(indok(3)),'HH:MM:SS'))
+semilogx(1e-2.*RBRgrid.Epsilon1(:,eventlog1),RBRgrid.z,'linewidth',2)
+semilogx(1e-2.*RBRgrid.Epsilon1(:,eventlog2),RBRgrid.z,'linewidth',2)
+legend(datestr(RBRgrid.time(eventlog),'HH:MM:SS'),...
+       datestr(RBRgrid.time(eventlog1),'HH:MM:SS'),...
+       datestr(RBRgrid.time(eventlog2),'HH:MM:SS'))
 set(gca,'XTick',[1e-10 1e-8 1e-6])   
 set(gca,'fontsize',15)
 axis ij
-ylim([2 300])
-xlim([1e-8 1e-4])
-title('Successive Profiles','fontsize',15)
+ylim([2 50])
+xlim([1e-10 1e-4])
+title('Profiles','fontsize',15)
 xlabel('\epsilon / W.kg^{-1}','fontsize',20)
 
 

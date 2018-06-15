@@ -1,4 +1,4 @@
-function [F1,F2]=plot_binned_chi(Chi_class,title_string,indplot)
+function [F1,F2,legend_string]=plot_binned_chi(Chi_class,title_string,indplot)
 
 
 F1 = figure(1);clf
@@ -11,6 +11,10 @@ if nargin<3
     indplot=[1 Nchi*Neps];
 end
 
+NOISE=load('toolbox/PLOTS/comparison_temp_granite_sproul.mat');
+H=get_filters_MADRE('MADRE2.1',NOISE.k_granite);
+noise=NOISE.spec_granite./H.FPO7(.6);
+noise=interp1(NOISE.k_granite/.6,noise,Chi_class.k);
 
 dataP=reshape(Chi_class.mPphiT22,[Nchi*Neps,L]);
 inddata=find(nansum(dataP,2)>0);
@@ -33,6 +37,8 @@ for i=1:length(inddata)
     ll(i)=loglog(Chi_class.k,squeeze(dataP(j,:)),'Color',cmap(i,:),'linewidth',2);
 end
 
+lnoise=loglog(Chi_class.k,(2*pi*Chi_class.k).^2 .* 62^2.*noise/.6,'r');
+
 mink=Chi_class.k(find(~isnan(nansum(dataP,1)),1,'first'));
 maxk=Chi_class.k(find(~isnan(nansum(dataP,1)),1,'last'));
 minP=min(dataP(:));
@@ -43,7 +49,7 @@ xlim([mink maxk])
 ylim([minP maxP])
 grid on
 xlabel('k [cpm]')
-ylabel('[$(\phi^T_k)^2$  / $(degC . m^{-1})^2$ / cpm]','interpreter','latex')
+ylabel('[$(\phi^T_k)^2$  / $(^{\circ}C . m^{-1})^2$ / cpm]','interpreter','latex')
 set(gca,'fontsize',20)
 title([title_string '- $\phi^{T22}_k$'],'interpreter','latex')
 
@@ -53,9 +59,10 @@ legend_string{length(inddata)+1}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%
 legend_string{length(inddata)+2}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%2.1f,%2.1f',min(log10(chi)),max(log10(epsilon)));
 legend_string{length(inddata)+3}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%2.1f,%2.1f',max(log10(chi)),min(log10(epsilon)));
 legend_string{length(inddata)+4}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%2.1f,%2.1f',max(log10(chi)),max(log10(epsilon)));
+legend_string{length(inddata)+5}='current noise';
 
 %hl=gridLegend([ll b1 b2 b3 b4],1,legend_string,'location','eastoutside');
-hl=legend([ll b1 b2 b3 b4],legend_string,'location','eastoutside');
+hl=legend([ll b1 b2 b3 b4 lnoise],legend_string,'location','eastoutside');
 set(hl,'fontsize',10)
 % 
 % axes('position',[.7 .1 .25 .82])
@@ -97,6 +104,8 @@ for i=1:length(inddata)
     ll(i)=loglog(Chi_class.k,squeeze(dataP(j,:)),'Color',cmap(i,:),'linewidth',2);
 end
 
+lnoise=loglog(Chi_class.k,(2*pi*Chi_class.k).^2 .* 62^2.*noise/.6,'r');
+
 mink=Chi_class.k(find(~isnan(nansum(dataP,1)),1,'first'));
 maxk=Chi_class.k(find(~isnan(nansum(dataP,1)),1,'last'));
 minP=min(dataP(:));
@@ -107,7 +116,7 @@ xlim([mink maxk])
 ylim([minP maxP])
 grid on
 xlabel('k [cpm]')
-ylabel('[$(\phi^T_k)^2$  / $(degC . m^{-1})^2$ / cpm]','interpreter','latex')
+ylabel('[$(\phi^T_k)^2$  / $(^{\circ}C . m^{-1})^2$ / cpm]','interpreter','latex')
 set(gca,'fontsize',20)
 title([title_string '- $\phi^{T21}_k$'],'interpreter','latex')
 
@@ -117,9 +126,10 @@ legend_string{length(inddata)+1}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%
 legend_string{length(inddata)+2}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%2.1f,%2.1f',min(log10(chi)),max(log10(epsilon)));
 legend_string{length(inddata)+3}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%2.1f,%2.1f',max(log10(chi)),min(log10(epsilon)));
 legend_string{length(inddata)+4}=sprintf('batchelor, log_{10}(\\epsilon,\\phi)~%2.1f,%2.1f',max(log10(chi)),max(log10(epsilon)));
+legend_string{length(inddata)+5}='current noise';
 
 %hl=gridLegend([ll b1 b2 b3 b4],1,legend_string,'location','eastoutside');
-hl=legend([ll b1 b2 b3 b4],legend_string,'location','eastoutside');
+hl=legend([ll b1 b2 b3 b4 lnoise],legend_string,'location','eastoutside');
 set(hl,'fontsize',10)
 
 

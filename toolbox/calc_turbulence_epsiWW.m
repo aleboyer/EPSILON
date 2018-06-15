@@ -1,5 +1,10 @@
-function [MS]=calc_turbulence_epsi_FastCTD(Profile,tscan,f,Sv)
-
+function [MS]=calc_turbulence_epsiWW(Profile,tscan,f,Sv)
+% calc_eps_mmp.m
+%   
+%	REQUIRES the following, set up in batchprocess4G_mmp.m, setup_epschi3_mmp.m:
+%		drop,procdata,cruise,mmpid, hfperscan,dt_hf,eps_step,FS_hf, f,df;
+%		neps,cntr_scan,pr_eps,w_eps, t,s,kvis;  save_eps_spec,displ_shear_spec;
+%	CREATES file eps<drop>.mat, saving:  
 %       MS structure for Micro Structure. Inside MS you ll find
 %       temperature spectra in degC Hz^-1
 %       Horizontal  velocity spectra in m^2/s^-2 Hz^-1
@@ -27,38 +32,13 @@ nbscan=2*nbscan-1;
 %% define the fall rate of the Profile. 
 %  Add Profile.w with w the vertical vel. 
 %  We are using the pressure from other sensors (CTD);
-Profile = compute_fallrate_downcast(Profile);
-Profile.w=Profile.w/100;
+Profile = compute_speed_upcast(Profile);
+Profile.w=-Profile.w/1e7;
 
 % on line calibration of the FPO7s
-ind_nonan1=find(~isnan(Profile.Sensor1));
-ind_nonan2=find(~isnan(Profile.Sensor2));
-CALFPO7_1=polyfit(Profile.Sensor1(ind_nonan1),Profile.T(ind_nonan1),3);
-CALFPO7_2=polyfit(Profile.Sensor2(ind_nonan2),Profile.T(ind_nonan2),3);
+CALFPO7_1=polyfit(Profile.Sensor1,Profile.T,3);
+CALFPO7_2=polyfit(Profile.Sensor2,Profile.T,3);
 %CALFPO7_2=polyfit(Profile.Sensor2,Profile.T,1);
-
-%TODO probably check nan at previous step
-Profile.Sensor1=fillmissing(Profile.Sensor1,'linear');
-Profile.Sensor2=fillmissing(Profile.Sensor2,'linear');
-Profile.Sensor3=fillmissing(Profile.Sensor3,'linear');
-Profile.Sensor4=fillmissing(Profile.Sensor4,'linear');
-Profile.Sensor5=fillmissing(Profile.Sensor5,'linear');
-Profile.Sensor6=fillmissing(Profile.Sensor6,'linear');
-Profile.Sensor7=fillmissing(Profile.Sensor7,'linear');
-Profile.Sensor8=fillmissing(Profile.Sensor8,'linear');
-
-Profile.Sensor1=filloutliers(Profile.Sensor1,'linear');
-Profile.Sensor2=filloutliers(Profile.Sensor2,'linear');
-Profile.Sensor3=filloutliers(Profile.Sensor3,'linear');
-Profile.Sensor4=filloutliers(Profile.Sensor4,'linear');
-Profile.Sensor5=filloutliers(Profile.Sensor5,'linear');
-Profile.Sensor6=filloutliers(Profile.Sensor6,'linear');
-Profile.Sensor7=filloutliers(Profile.Sensor7,'linear');
-Profile.Sensor8=filloutliers(Profile.Sensor8,'linear');
-Profile.P=filloutliers(Profile.P,'linear');
-Profile.T=filloutliers(Profile.T,'linear');
-Profile.S=filloutliers(Profile.S,'linear');
-
 
 
 %% define the index in the profile for each scan
@@ -77,7 +57,7 @@ MS.w       = cellfun(@(x) nanmean(Profile.w(x)),total_indscan(ind_downcast));
 MS.t       = cellfun(@(x) nanmean(Profile.T(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
 MS.s       = cellfun(@(x) nanmean(Profile.S(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
 MS.pr      = cellfun(@(x) nanmean(Profile.P(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
-MS.time    = cellfun(@(x) nanmean(Profile.time(x)),total_indscan(ind_downcast)); % needed to compute Kvis 
+
 
 % loop to estimate eps
 % get and split the data
@@ -106,16 +86,13 @@ indf1=indf1(1:end-1);
 f1=f1(indf1);
 Lf1=length(indf1);
 
-P11= 2*P11(:,:,indf1);
-P1 = 2*P1(:,:,indf1);
+P11=2*P11(:,:,indf1);
 %% get MADRE filters
 h_freq=get_filters_MADRE('MADRE2.1',f1);
 
 %% correct transfert functions for accel spectra
 P11(5:7,:,:)=P11(5:7,:,:)./...
     shiftdim(repmat(ones(nbscan,1)*h_freq.electAccel,[1,1,3]),2).^2;
-P1(5:7,:,:) =P1(5:7,:,:)./...
-    shiftdim(repmat(ones(nbscan,1)*sqrt(h_freq.electAccel),[1,1,3]),2).^2;
 
 %% correct transfert functions for shear spectra
 
@@ -123,14 +100,12 @@ TF1 =@(x) (Sv.'.*x/(2*G)).^2 .* h_freq.shear .* haf_oakey(f1,x);     % should ad
 TFshear=cell2mat(cellfun(@(x) TF1(x),num2cell(MS.w),'un',0).');
 TFshear=reshape(TFshear,[2,nbscan,Lf1]);
 P11(3:4,:,:) = P11(3:4,:,:) ./ TFshear;      % vel frequency spectra m^2/s^-2 Hz^-1
-P1(3:4,:,:)  = P1(3:4,:,:) ./ sqrt(TFshear);      % vel frequency spectra m^2/s^-2 Hz^-1
 
 %% correct transfert functions for temperature spectra
 Emp_Corr_fac=1;
 TFtemp=cell2mat(cellfun(@(x) h_freq.FPO7(x),num2cell(MS.w),'un',0).');
 TFtemp=shiftdim(repmat(TFtemp,[1,1,2]),2);
 P11(1:2,:,:) = Emp_Corr_fac * P11(1:2,:,:)./TFtemp;
-P1(1:2,:,:)  = Emp_Corr_fac * P1(1:2,:,:)./sqrt(TFtemp);
 
 
 % convert frequency to wavenumber
@@ -143,12 +118,10 @@ k_all=nanmin(k(:)):dk_all:nanmax(k(:));
 % temperature, vel and accell spec as function of k
 nbchannel=7;
 P11k  = P11.* shiftdim(repmat(ones(nbchannel,1)*MS.w,[1,1,Lf1]),3);   
-P1k   = P1.* shiftdim(repmat(ones(nbchannel,1)*MS.w,[1,1,Lf1]),3);   
 
 MS.f  =  f1;
 MS.k  = k_all;
 MS.Pf =  P11;
-MS.P1f =  P1;
 % Set kmax for integration to highest bin below pump spike,
 % which is between 49 and 52 Hz in a 1024-pt spectrum
 MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
@@ -159,7 +132,6 @@ MS.kmax=MS.fmax./MS.w; % Lowest estimate below pump spike in 1024-pt record
 % unless spectrum is noisy at lower k.
 % Check that data window > 0.5 m, as needed for initial estimate
 for j=1:nbscan
-    fprintf('scan %i over %i \n',j,nbscan)
     MS.PphiT_k(j,:,1)  = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(1,j,:)),k_all);        % T1_k spec  as function of k
     MS.PphiT_k(j,:,2)  = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(2,j,:)),k_all);        % T2_k spec  as function of k
     MS.Pshear_k(j,:,1) = (2*pi*k_all).^2 .* interp1(k(j,:),squeeze(P11k(3,j,:)),k_all);        % shear spec  as function of k
