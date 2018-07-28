@@ -1,4 +1,4 @@
-function [F1,F2,legend_string]=plot_binned_chi(Chi_class,title_string,indplot)
+function [F1,F2,legend_string]=plot_binned_chi(Chi_class,Meta_Data,title_string,indplot)
 
 
 F1 = figure(1);clf
@@ -7,12 +7,12 @@ axes('position',[.05 .1 .82 .78])
 
 [Nchi,Neps,L]=size(Chi_class.Pbatch22);
 
-if nargin<3
+if nargin<4
     indplot=[1 Nchi*Neps];
 end
 
 NOISE=load('toolbox/PLOTS/comparison_temp_granite_sproul.mat');
-H=get_filters_MADRE('MADRE2.1',NOISE.k_granite);
+H=get_filters_MADRE(Meta_Data,NOISE.k_granite);
 noise=NOISE.spec_granite./H.FPO7(.6);
 noise=interp1(NOISE.k_granite/.6,noise,Chi_class.k);
 

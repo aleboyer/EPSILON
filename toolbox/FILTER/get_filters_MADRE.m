@@ -1,4 +1,4 @@
-function H=get_filters_MADRE(version,f)
+function H=get_filters_MADRE(Meta_Data,f)
 %% Define the electronic filter, ADC filters.
 %  The electronics filter Helec = charge amp filter (Hca) + Gain (Hg)
 %  The ADC filter is a simple sinc^4 and the gain of the ADC is 2. Other options are available. 
@@ -6,9 +6,19 @@ function H=get_filters_MADRE(version,f)
 %  TODO: enter argument to be able to change the ADC filter without hard
 %  coding
 %
-switch version
-    case{'MADRE2.1'}
-        
+switch Meta_Data.epsi.s1.ADCfilter
+    case 'sinc4'
+        Hs1filter=(sinc(f/(2*f(end)))).^4;
+end
+switch Meta_Data.epsi.t1.ADCfilter
+    case 'sinc4'
+        Ht1filter=(sinc(f/(2*f(end)))).^4;
+end
+switch Meta_Data.epsi.a1.ADCfilter
+    case 'sinc4'
+        Ha1filter=(sinc(f/(2*f(end)))).^4;
+end
+
         % shear channels
         %charge amp filter
         
@@ -16,17 +26,14 @@ switch version
         epsi_ca   = interp1(ca_filter.freq,ca_filter.coef_filt ,f);
         gain_ca      = .5; %TODO check the charge amp gain with sean
         helectronics= epsi_ca*gain_ca;% charge amp from sean spec sheet
-        
-        sinc4_freq=f/(2*f(end));
-        
         H.gainshear=1;
-        H.adcshear=(H.gainshear.*(sinc(sinc4_freq)).^4);
+        H.adcshear=H.gainshear.*Hs1filter;
         H.electshear=helectronics.^2;
         H.shear=H.electshear .* H.adcshear.^2;
         
         %% FPO7 channels
         H.gainFPO7=1;
-        H.electFPO7 = H.gainFPO7.*(sinc(sinc4_freq)).^4;
+        H.electFPO7 = H.gainFPO7.*Ht1filter;
         
         %speed% convert to m/s
         %tau=0.005 * speed^(-0.32); % thermistor time constant
@@ -36,7 +43,7 @@ switch version
 
         %% Accel channels
         H.gainAccel  = 1;
-        H.electAccel = (H.gainAccel.*(sinc(sinc4_freq)).^4).^2;
+        H.electAccel = (H.gainAccel.*Ha1filter).^2;
 
 end
 

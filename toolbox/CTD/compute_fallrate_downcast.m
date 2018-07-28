@@ -2,8 +2,7 @@ function Profile = compute_fallrate_downcast(Profile)
 
 %% compute fall rate with pressure
 dNH = 2; % for center-difn fall rate, compute using points +/-dNH away
-%px = Profile.P(:); tx = Profile.rbrtime(:)*86400;
-px = Profile.P(:); tx = Profile.time(:)*86400;
+px = Profile.P(:); tx = Profile.epsitime(:)*86400;
 fp = dNH+1; lp = length(px)-dNH;
 dz = ( px(fp+dNH:lp+dNH) - px(fp-dNH:lp-dNH) ) * 100;
 dt = ( tx(fp+dNH:lp+dNH) - tx(fp-dNH:lp-dNH) );

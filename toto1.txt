@@ -1,2 +1,0 @@
-mission vehicle_name deployement path_mission vehicle root L1path Epsipath CTDpath RAWpath Firmware aux1 epsi
-TEMPLATE template d2 . WireWalker ./TEMPLATE/template/d2 ./TEMPLATE/template/d2/L1/ ./TEMPLATE/template/d2/epsi/ ./TEMPLATE/template/d2/ctd/ ./TEMPLATE/template/d2/raw/   

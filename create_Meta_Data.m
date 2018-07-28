@@ -4,7 +4,7 @@ addpath toolbox/FILTER/
 
 
 
-fid=fopen('/Volumes/DataDrive/DEV/madre/d1/raw/Meta_DEV_d1.dat','r');
+fid=fopen('/Users/aleboyer/ARNAUD/SCRIPPS/NISKINE/epsifish2/d6/raw/Meta_NISKINE_d6.dat','r');
 
 count=0;
 while(count<10)
